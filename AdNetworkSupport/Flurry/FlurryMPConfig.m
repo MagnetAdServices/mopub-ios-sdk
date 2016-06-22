@@ -2,7 +2,8 @@
 
 @implementation FlurryMPConfig
 
-+ (void)startSessionWithApiKey:(NSString *)apiKey {
++ (void)startSessionWithApiKey:(NSString *)apiKey
+{
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         if (![Flurry activeSessionExists]) {
