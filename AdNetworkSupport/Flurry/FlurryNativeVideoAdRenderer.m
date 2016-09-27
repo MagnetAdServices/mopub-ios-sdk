@@ -66,9 +66,6 @@
     [self initAdView];
     [self setupVideoView];
     
-    // We only load text here. We delay loading of images until the view is added to the view hierarchy
-    // so we don't unnecessarily load images from the cache if the user is scrolling fast. So we will
-    // just store the image URLs for now.
     if ([self.adView respondsToSelector:@selector(nativeMainTextLabel)]) {
         self.adView.nativeMainTextLabel.text = [adapter.properties objectForKey:kAdTextKey];
     }
@@ -79,33 +76,6 @@
     
     if ([self.adView respondsToSelector:@selector(nativeCallToActionTextLabel)] && self.adView.nativeCallToActionTextLabel) {
         self.adView.nativeCallToActionTextLabel.text = [adapter.properties objectForKey:kAdCTATextKey];
-    }
-    
-    if ([self.adView respondsToSelector:@selector(nativePrivacyInformationIconImageView)]) {
-        // MoPub ads pass the privacy information icon key through the properties dictionary.
-        NSString *daaIconImageLoc = [adapter.properties objectForKey:kAdDAAIconImageKey];
-        if (daaIconImageLoc) {
-            UIImageView *imageView = self.adView.nativePrivacyInformationIconImageView;
-            imageView.hidden = NO;
-            
-            UIImage *daaIconImage = [UIImage imageNamed:daaIconImageLoc];
-            imageView.image = daaIconImage;
-            
-            // Attach a gesture recognizer to handle loading the daa icon URL.
-            UITapGestureRecognizer *tapRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(DAAIconTapped)];
-            imageView.userInteractionEnabled = YES;
-            [imageView addGestureRecognizer:tapRecognizer];
-        } else if ([adapter respondsToSelector:@selector(privacyInformationIconView)]) {
-            UIView *privacyIconAdView = [adapter privacyInformationIconView];
-            privacyIconAdView.frame = self.adView.nativePrivacyInformationIconImageView.bounds;
-            privacyIconAdView.autoresizingMask = UIViewAutoresizingFlexibleHeight | UIViewAutoresizingFlexibleWidth;
-            self.adView.nativePrivacyInformationIconImageView.userInteractionEnabled = YES;
-            [self.adView.nativePrivacyInformationIconImageView addSubview:privacyIconAdView];
-            self.adView.nativePrivacyInformationIconImageView.hidden = NO;
-        } else {
-            self.adView.nativePrivacyInformationIconImageView.userInteractionEnabled = NO;
-            self.adView.nativePrivacyInformationIconImageView.hidden = YES;
-        }
     }
     
     if ([self shouldLoadMediaView]) {
@@ -137,12 +107,10 @@
     self.adViewInViewHierarchy = (superview != nil);
     
     if (superview) {
-        // We'll start asychronously loading the native ad images now.
         if ([self.adapter.properties objectForKey:kAdIconImageKey] && [self.adView respondsToSelector:@selector(nativeIconImageView)]) {
             [self.rendererImageHandler loadImageForURL:[NSURL URLWithString:[self.adapter.properties objectForKey:kAdIconImageKey]] intoImageView:self.adView.nativeIconImageView];
         }
         
-        // Only handle the loading of the main image if the adapter doesn't already have a view for it.
         if (!([self.adapter respondsToSelector:@selector(mainMediaView)] && [self.adapter mainMediaView])) {
             if ([self.adapter.properties objectForKey:kAdMainImageKey] && [self.adView respondsToSelector:@selector(nativeMainImageView)]) {
                 [self.rendererImageHandler loadImageForURL:[NSURL URLWithString:[self.adapter.properties objectForKey:kAdMainImageKey]] intoImageView:self.adView.nativeMainImageView];
